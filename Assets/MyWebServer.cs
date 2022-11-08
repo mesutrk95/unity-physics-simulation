@@ -39,9 +39,13 @@ public class MyWebServer : MonoBehaviour
 
     async private void Listen()
     {
+        string url = "http://127.0.0.1:" + port.ToString() + "/";
         _listener = new HttpListener();
-        _listener.Prefixes.Add("http://*:" + port.ToString() + "/");
+        _listener.Prefixes.Add(url);
         _listener.Start();
+
+        Debug.Log("Web server listening at " + url);
+
         while (true)
         {
             try
@@ -80,6 +84,7 @@ public class MyWebServer : MonoBehaviour
          
         byte[] jsonByte = Encoding.UTF8.GetBytes(JsonUtility.ToJson(result));
         context.Response.ContentLength64 = jsonByte.Length;
+        context.Response.ContentType = "application/json";
         Stream jsonStream = new MemoryStream(jsonByte);
         byte[] buffer = new byte[1024 * bufferSize];
         int nbytes;

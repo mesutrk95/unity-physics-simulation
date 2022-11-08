@@ -5,6 +5,11 @@ using UnityEngine;
 
 public class PhysicsSimulate : MonoBehaviour
 {
+    public enum SimulateStatus
+    {
+        Success, Failed, TimeLimitFail, 
+    }
+
     [System.Serializable]
     public class Player
     {
@@ -12,10 +17,16 @@ public class PhysicsSimulate : MonoBehaviour
         public string y;
         public string id;
     }
+
     [System.Serializable]
-    public class SimulateResult 
+    public class SimulateResult
     {
-        public List<Player> players;
+        public List<Player> players = new List<Player>();
+        public string timeStep;
+        public int iterations;
+        public long calcTime;
+        public string status;
+
     }
 
     public List<Transform> objects;
@@ -37,11 +48,17 @@ public class PhysicsSimulate : MonoBehaviour
         }
     }
     
-    private void Update() {
-        if(Input.GetKey(KeyCode.Space))
-        { 
-            Debug.Log("simulate");
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            Debug.Log("simulation");
             SimulatePhysics();
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            Debug.Log("one step simulation ");
+            Physics.Simulate(timeStep);
         }
     }
 
@@ -68,13 +85,11 @@ public class PhysicsSimulate : MonoBehaviour
     string v2s(Vector3 vec){
         return $"{vec.x.ToString(".000000")},{vec.y.ToString(".000000")},{vec.z.ToString(".000000")}" ;
     }
-
-    [ContextMenu("SimulateToIdle")]
-    public SimulateResult SimulateToIdle()
+     
+    async public Task<SimulateResult> SimulateToIdle()
     {
         var timer = new System.Diagnostics.Stopwatch(); 
-        var maxCalcTime = 5000; 
-        var maxAfterIdleWait = 500; 
+        var maxCalcTime = 5000;  
         var _iterations = 0; 
 
         var isIdle = false;
@@ -106,24 +121,30 @@ public class PhysicsSimulate : MonoBehaviour
                     idle = false; 
                 }
                 lastPosAndRots[i] = currentPosRot;
-            }
-
-            // if(idle && maxAfterIdleWait > 0){
-
-            // }
+            } 
 
             isIdle = idle;
             _iterations++;
  
-            if(timer.Elapsed.Milliseconds > maxCalcTime){
+            if(timer.ElapsedMilliseconds > maxCalcTime){
                 Debug.Log("calculation time limit");
                 break;
             }
+
+            // if physics take 10 seconds 
+            if(_iterations % 10000 == 0)  
+                await Task.Delay(500);
+             
         }
-        Debug.Log("calculation finished : " + timer.Elapsed.Milliseconds + "ms, iterations: "+ _iterations);
+        timer.Stop();
+
+        Debug.Log("calculation finished : " + timer.ElapsedMilliseconds + "ms, iterations: "+ _iterations);
 
         var result = new SimulateResult();
-        result.players = new List<Player>();
+        result.timeStep = timeStep.ToString();
+        result.iterations = _iterations;
+        result.calcTime = timer.ElapsedMilliseconds;
+        result.status = (isIdle ? SimulateStatus.Success : SimulateStatus.TimeLimitFail).ToString();
         for (int i = 0; i < objects.Count; i++)
         {
             result.players.Add(new Player() {
