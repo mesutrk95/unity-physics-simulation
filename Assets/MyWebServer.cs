@@ -59,13 +59,9 @@ public class MyWebServer : MonoBehaviour
             }
         }
     }
-     
-    async private Task Process(HttpListenerContext context)
-    {
-        string filename = context.Request.Url.AbsolutePath;
-        filename = filename.Substring(1);
-        Debug.Log(filename);
 
+    private Dictionary<string, object> _GetNamedParams(HttpListenerContext context)
+    {
         Dictionary<string, object> namedParameters = new Dictionary<string, object>();
         if (!string.IsNullOrEmpty(context.Request.Url.Query))
         {
@@ -80,20 +76,39 @@ public class MyWebServer : MonoBehaviour
             }
         }
 
-        var result = await _methodController.GetRequest(filename, namedParameters);
-         
-        byte[] jsonByte = Encoding.UTF8.GetBytes(JsonUtility.ToJson(result));
-        context.Response.ContentLength64 = jsonByte.Length;
-        context.Response.ContentType = "application/json";
-        Stream jsonStream = new MemoryStream(jsonByte);
-        byte[] buffer = new byte[1024 * bufferSize];
-        int nbytes;
-        while ((nbytes = jsonStream.Read(buffer, 0, buffer.Length)) > 0)
-            context.Response.OutputStream.Write(buffer, 0, nbytes);
-        jsonStream.Close();
+        return namedParameters;
+    }
 
-        context.Response.OutputStream.Flush();
-        context.Response.OutputStream.Close();
+
+    async private Task Process(HttpListenerContext context)
+    {
+        string method = context.Request.Url.AbsolutePath;
+        method = method.Substring(1);
+        Debug.Log("New GetRequest -> " + method); 
+
+        if (method == "Simulate")
+        {
+            var namedParams = _GetNamedParams(context);
+            var result = await _methodController.SimulateRequest(namedParams);
+
+            byte[] jsonByte = Encoding.UTF8.GetBytes(JsonUtility.ToJson(result));
+            context.Response.ContentLength64 = jsonByte.Length;
+            context.Response.ContentType = "application/json";
+            Stream jsonStream = new MemoryStream(jsonByte);
+            byte[] buffer = new byte[1024 * bufferSize];
+            int nbytes;
+            while ((nbytes = jsonStream.Read(buffer, 0, buffer.Length)) > 0)
+                context.Response.OutputStream.Write(buffer, 0, nbytes);
+
+            jsonStream.Close();
+            context.Response.OutputStream.Flush();
+            context.Response.OutputStream.Close();
+        }
+        else
+        { 
+            context.Response.OutputStream.Flush();
+            context.Response.OutputStream.Close();
+        }
     }
 
        

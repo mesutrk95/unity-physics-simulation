@@ -44,12 +44,10 @@ public class HttpRoutes : MonoBehaviour
         return cur_time;
     }
 
-    async public Task<PhysicsSimulate.SimulateResult> GetRequest(string method, Dictionary<string, object> nameParams)
-    {
-        Debug.Log("New GetRequest -> " + method);
-
-        var timer = new System.Diagnostics.Stopwatch();
-        timer.Start();
+    async public Task<PhysicsSimulate.SimulateResult> SimulateRequest(Dictionary<string, object> nameParams)
+    { 
+        //var timer = new System.Diagnostics.Stopwatch();
+        //timer.Start();
 
         var cmd = new Command() { id = getUtcNow(), calculated = false, cancelled = false };
         cmds.Add(cmd);
@@ -62,9 +60,10 @@ public class HttpRoutes : MonoBehaviour
             //{
             //    cmd.cancelled = true;
             //}
-        }  
+        }
 
-        return cmd.result;
+        return cmd.result; 
+
     }
 }
 

@@ -29,6 +29,7 @@ public class PhysicsSimulate : MonoBehaviour
 
     }
 
+    public bool enableAutoSimulation = false;
     public List<Transform> objects;
     private List<Vector3> _initPoses = new List<Vector3>();
     private List<Quaternion> _initRots = new List<Quaternion>();
@@ -36,17 +37,31 @@ public class PhysicsSimulate : MonoBehaviour
     public int iterations = 10;
     public float timeStep = 0.01f;
 
+    public PhysicsScene physicsScene; 
+
     void Awake()
     { 
         Debug.Log("Unity Instance Started.");
-        Physics.autoSimulation = false; 
+        Physics.autoSimulation = false;
+        physicsScene = gameObject.scene.GetPhysicsScene();
 
+        Debug.Log("Scene = " + gameObject.scene.name);
+        Debug.Log("Physics Scene = " + physicsScene.ToString());
+            
         for (int i = 0; i < objects.Count; i++)
         {
             _initPoses.Add( objects[i].transform.position ); 
-            _initRots.Add( objects[i].transform.rotation ); 
-        }
+            _initRots.Add( objects[i].transform.rotation );
+        } 
     }
+
+    //void FixedUpdate()
+    //{
+    //    if (enableAutoSimulation)
+    //    {
+    //        physicsScene.Simulate(Time.fixedDeltaTime);
+    //    }
+    //}
     
     private void Update()
     {
@@ -58,7 +73,7 @@ public class PhysicsSimulate : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S))
         {
             Debug.Log("one step simulation ");
-            Physics.Simulate(timeStep);
+            physicsScene.Simulate(timeStep);
         }
     }
 
@@ -78,7 +93,7 @@ public class PhysicsSimulate : MonoBehaviour
 
         for (int i = 0; i < iterations; i++)
         {
-            Physics.Simulate(timeStep);
+            physicsScene.Simulate(timeStep);
         }
     }
 
@@ -106,8 +121,8 @@ public class PhysicsSimulate : MonoBehaviour
         timer.Start();
 
         while (!isIdle)
-        {
-            Physics.Simulate(timeStep);
+        { 
+            physicsScene.Simulate(timeStep);
 
             var idle = true;
             for (int i = 0; i < objects.Count; i++)
