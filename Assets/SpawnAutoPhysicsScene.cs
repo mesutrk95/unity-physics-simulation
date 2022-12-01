@@ -26,5 +26,12 @@ public class SpawnAutoPhysicsScene : MonoBehaviour
     void FixedUpdate()
     {
         physicsScene.Simulate(Time.fixedDeltaTime);
+        //physicsScene.Simulate(Time.fixedDeltaTime / 2);
+    }
+
+    [ContextMenu("")]
+    void UpdateToIdle()
+    {
+
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class PhysicsSimulate : MonoBehaviour
+public class PhysicsSimulate2D : MonoBehaviour
 {
     public enum SimulateStatus
     {
@@ -29,15 +29,16 @@ public class PhysicsSimulate : MonoBehaviour
 
     }
 
-    public bool enableAutoSimulation = false;
-    public List<Transform> objects;
+    public bool enableAutoSimulation = false; 
+    public Transform objectsHolder;
     private List<Vector3> _initPoses = new List<Vector3>();
-    private List<Quaternion> _initRots = new List<Quaternion>(); 
+    private List<Quaternion> _initRots = new List<Quaternion>();
 
     public int iterations = 10;
     public float timeStep = 0.01f;
 
-    public PhysicsScene physicsScene; 
+    public PhysicsScene physicsScene;
+    public Objects2D objects;
 
     void Awake()
     { 
@@ -48,10 +49,10 @@ public class PhysicsSimulate : MonoBehaviour
         Debug.Log("Scene = " + gameObject.scene.name);
         Debug.Log("Physics Scene = " + physicsScene.ToString());
             
-        for (int i = 0; i < objects.Count; i++)
+        for (int i = 0; i < objectsHolder.childCount; i++)
         {
-            _initPoses.Add( objects[i].transform.position ); 
-            _initRots.Add( objects[i].transform.rotation );
+            _initPoses.Add(objectsHolder.GetChild(i).position ); 
+            _initRots.Add(objectsHolder.GetChild(i).rotation );
         } 
     }
 
@@ -81,15 +82,20 @@ public class PhysicsSimulate : MonoBehaviour
             Debug.Log("one step simulation ");
             physicsScene.Simulate(timeStep);
         }
+        if (Input.GetMouseButtonDown(1))
+        {
+            objects.Hit(); 
+            Debug.Log("froce ");
+        }
     }
 
 
     [ContextMenu("Reset")]
     public void Reset() {
-        for (int i = 0; i < objects.Count; i++)
+        for (int i = 0; i < objectsHolder.childCount; i++)
         {
-            objects[i].transform.position = _initPoses[i];
-            objects[i].transform.rotation = _initRots[i]; 
+            objectsHolder.GetChild(i).transform.position = _initPoses[i];
+            objectsHolder.GetChild(i).transform.rotation = _initRots[i]; 
         } 
     }
 
@@ -117,9 +123,9 @@ public class PhysicsSimulate : MonoBehaviour
         var lastPosAndRots = new List<string>(); 
  
         //init pos & rots
-        for (int i = 0; i < objects.Count; i++)
+        for (int i = 0; i < objectsHolder.childCount; i++)
         {
-            var s = v2s(objects[i].position) + "-" + v2s(objects[i].eulerAngles); 
+            var s = v2s(objectsHolder.GetChild(i).position) + "-" + v2s(objectsHolder.GetChild(i).eulerAngles); 
             lastPosAndRots.Add(s);
         } 
 
@@ -131,10 +137,10 @@ public class PhysicsSimulate : MonoBehaviour
             physicsScene.Simulate(timeStep);
 
             var idle = true;
-            for (int i = 0; i < objects.Count; i++)
+            for (int i = 0; i < objectsHolder.childCount; i++)
             {
-                var pos = objects[i].position;
-                var rot = objects[i].eulerAngles;
+                var pos = objectsHolder.GetChild(i).position;
+                var rot = objectsHolder.GetChild(i).eulerAngles;
                 var currentPosRot = v2s(pos) + "-" + v2s(rot); 
                 // Debug.Log(currentPosRot +"==="+ lastPosAndRots[i]);
 
@@ -166,11 +172,11 @@ public class PhysicsSimulate : MonoBehaviour
         result.iterations = _iterations;
         result.calcTime = timer.ElapsedMilliseconds;
         result.status = (isIdle ? SimulateStatus.Success : SimulateStatus.TimeLimitFail).ToString();
-        for (int i = 0; i < objects.Count; i++)
+        for (int i = 0; i < objectsHolder.childCount; i++)
         {
             result.players.Add(new Player() {
-                x = objects[i].position.x.ToString(), 
-                y = objects[i].position.y.ToString(), 
+                x = objectsHolder.GetChild(i).position.x.ToString(), 
+                y = objectsHolder.GetChild(i).position.y.ToString(), 
                 id = i.ToString() 
             });
         }
